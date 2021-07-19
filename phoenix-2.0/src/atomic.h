@@ -190,6 +190,39 @@ static inline uintptr_t atomic_read(void* addr)
 	return v;
 }
 
+#elif (defined(__AARCH64__))
+
+static inline void flush(void* addr)
+{
+	asm("":::"memory");
+}
+
+static inline uintptr_t atomic_read(void* addr)
+{
+	return __atomic_load_n((uintptr_t *)addr, __ATOMIC_SEQ_CST);
+}
+
+static inline int test_and_set(uintptr_t* n)
+{
+	return __atomic_test_and_set(n, __ATOMIC_SEQ_CST);
+}
+
+static inline unsigned int fetch_and_inc(unsigned int* n)
+{
+	return __atomic_fetch_add(n, 1, __ATOMIC_SEQ_CST);
+}
+
+static inline int cmp_and_swp(uintptr_t v, uintptr_t* cmper, uintptr_t matcher)
+{
+	return __atomic_compare_exchange_n(&v, &matcher, *cmper, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+}
+
+static inline uintptr_t atomic_xchg(uintptr_t n, uintptr_t* v)
+{
+	return __atomic_exchange_n(v, n, __ATOMIC_SEQ_CST);
+}
+
+
 #else
 #error unknown arch
 #endif

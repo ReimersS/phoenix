@@ -61,6 +61,10 @@ ifeq ($(ARCHTYPE),sparc)
 ARCH = -DCPU_V9
 endif
 
+ifeq ($(ARCHTYPE),aarch64)
+ARCH = -D__AARCH64__
+endif
+
 ifeq ($(shell uname -m),x86_64)
 ARCH = -D__x86_64__
 endif
