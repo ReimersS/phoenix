@@ -55,7 +55,7 @@ ifeq ($(OSTYPE),Darwin)
 OS = -D_DARWIN_
 endif
 
-ARCHTYPE = $(shell uname -p)
+ARCHTYPE = $(shell uname -m)
 
 ifeq ($(ARCHTYPE),sparc)
 ARCH = -DCPU_V9
@@ -65,7 +65,7 @@ ifeq ($(ARCHTYPE),aarch64)
 ARCH = -D__AARCH64__
 endif
 
-ifeq ($(shell uname -m),x86_64)
+ifeq ($(ARCHTYPE),x86_64)
 ARCH = -D__x86_64__
 endif
 
