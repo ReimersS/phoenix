@@ -34,6 +34,8 @@
 #include <sys/processor.h>
 #include <sys/lgrp_user.h>
 
+#elif defined(_DARWIN_)
+
 #else
 #error OS not supported
 #endif
@@ -103,6 +105,8 @@ int proc_bind_thread (int cpu_id)
     return sched_setaffinity (0, sizeof (cpu_set), &cpu_set);
 #elif defined (_SOLARIS_)
     return processor_bind (P_LWPID, P_MYID, cpu_id, NULL);
+#elif defined (_DARWIN_)
+    return 0;
 #endif
 }
 
@@ -112,6 +116,8 @@ int proc_unbind_thread ()
     return sched_setaffinity (0, sizeof (cpu_set_t), proc_get_full_set());
 #elif defined (_SOLARIS_)
     return processor_bind (P_LWPID, P_MYID, PBIND_NONE, NULL);
+#elif defined (_DARWIN_)
+    return 0;
 #endif
 }
 
@@ -128,6 +134,8 @@ bool proc_is_available (int cpu_id)
     return CPU_ISSET (cpu_id, &cpu_set) ? true : false;
 #elif defined (_SOLARIS_)
     return (p_online (cpu_id, P_STATUS) == P_ONLINE);
+#elif defined (_DARWIN_)
+    return 0;
 #endif
 }
 
@@ -147,5 +155,7 @@ int proc_get_cpuid (void)
     return i;
 #elif defined (_SOLARIS_)
     return getcpuid ();
+#elif defined (_DARWIN_)
+    return 0;
 #endif
 }

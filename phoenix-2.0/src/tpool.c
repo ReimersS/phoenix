@@ -34,7 +34,7 @@
 #include "stddefines.h"
 
 typedef struct {
-    sem_t           sem_run;
+    sem_t           *sem_run;
     unsigned int    *num_workers_done;
     sem_t           *sem_all_workers_done;
     thread_func     *thread_func;
@@ -49,7 +49,7 @@ struct tpool_t {
     int             num_workers;
     int             die;
     thread_func     thread_func;
-    sem_t           sem_all_workers_done;
+    sem_t           *sem_all_workers_done;
     unsigned int    num_workers_done;
     void            **args;
     pthread_t       *threads;
@@ -84,9 +84,19 @@ tpool_t* tpool_create (int num_threads)
     if (tpool->thread_args == NULL) 
         goto fail_thread_args;
 
-    ret = sem_init (&tpool->sem_all_workers_done, 0, 0);
+#if defined(_DARWIN_)
+    tpool->sem_all_workers_done = sem_open("/semaphore", O_CREAT, 0644, 0);
+    if (tpool->sem_all_workers_done == SEM_FAILED)
+	 goto fail_all_workers_done;
+    sem_unlink("/semaphore");
+#else
+    tpool->sem_all_workers_done = mem_calloc(1, sizeof(sem_t));
+    if (tpool->sem_all_workers_done == NULL)
+	 goto fail_all_workers_done;
+    ret = sem_init (tpool->sem_all_workers_done, 0, 0);
     if (ret != 0) 
-        goto fail_all_workers_done;
+	 goto fail_all_workers_done;
+#endif
 
     CHECK_ERROR (pthread_attr_init (&attr));
     CHECK_ERROR (pthread_attr_setscope (&attr, PTHREAD_SCOPE_SYSTEM));
@@ -95,9 +105,19 @@ tpool_t* tpool_create (int num_threads)
     tpool->die = 0;
     for (i = 0; i < num_threads; ++i) {
         /* Initialize thread argument. */
-        CHECK_ERROR (sem_init (&(tpool->thread_args[i].sem_run), 0, 0));
+#if defined(_DARWIN_)
+	tpool->thread_args[i].sem_run = sem_open("/semaphore", O_CREAT, 0644, 0);
+	if (tpool->thread_args[i].sem_run == SEM_FAILED)
+	     goto fail_thread_create;
+	sem_unlink("/semaphore");
+#else
+	tpool->thread_args[i].sem_run = mem_calloc(1, sizeof(sem_t));
+	if (tpool->thread_args[i].sem_run == NULL)
+	     goto fail_thread_create;
+        CHECK_ERROR (sem_init (tpool->thread_args[i].sem_run, 0, 0));
+#endif
         tpool->thread_args[i].sem_all_workers_done = 
-            &tpool->sem_all_workers_done;
+            tpool->sem_all_workers_done;
         tpool->thread_args[i].num_workers_done = 
             &tpool->num_workers_done;
         tpool->thread_args[i].die = &tpool->die;
@@ -119,6 +139,7 @@ fail_thread_create:
     --i;
     while (i >= 0)
     {
+	mem_free (tpool->thread_args[i].sem_run);
         pthread_cancel (tpool->threads[i]);
         --i;
     }
@@ -166,7 +187,7 @@ int tpool_begin (tpool_t *tpool)
     tpool->num_workers_done = 0;
 
     for (i = 0; i < tpool->num_workers; ++i) {
-        ret = sem_post (&(tpool->thread_args[i].sem_run));
+        ret = sem_post (tpool->thread_args[i].sem_run);
         if (ret != 0) 
             return -1;
     }
@@ -183,7 +204,7 @@ int tpool_wait (tpool_t *tpool)
     if (tpool->num_workers == 0)
         return 0;
 
-    ret = sem_wait (&tpool->sem_all_workers_done);
+    ret = sem_wait (tpool->sem_all_workers_done);
     if (ret != 0) 
         return -1;
 
@@ -223,12 +244,12 @@ int tpool_destroy (tpool_t *tpool)
         mem_free (tpool->thread_args[i].ret);
 
         tpool->die = 1;
-        sem_post(&tpool->thread_args[i].sem_run);
+        sem_post(tpool->thread_args[i].sem_run);
     }
 
-    sem_wait(&tpool->sem_all_workers_done);
+    sem_wait(tpool->sem_all_workers_done);
 
-    sem_destroy(&tpool->sem_all_workers_done);
+    sem_destroy(tpool->sem_all_workers_done);
     mem_free (tpool->args);
     mem_free (tpool->threads);
     mem_free (tpool->thread_args);
@@ -250,7 +271,7 @@ static void* thread_loop (void *arg)
 
     while (1)
     {
-        CHECK_ERROR (sem_wait (&thread_arg->sem_run));
+        CHECK_ERROR (sem_wait (thread_arg->sem_run));
         if (*thread_arg->die)
             break;
 
@@ -269,7 +290,7 @@ static void* thread_loop (void *arg)
         }
     }
 
-    sem_destroy (&thread_arg->sem_run);
+    sem_destroy (thread_arg->sem_run);
     num_workers_done = fetch_and_inc(thread_arg->num_workers_done) + 1;
     if (num_workers_done == *thread_arg->num_workers)
     {

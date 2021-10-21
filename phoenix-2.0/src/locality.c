@@ -37,6 +37,8 @@
 #include <sys/lgrp_user.h>
 #include <sys/mman.h>
 
+#elif defined (_DARWIN_)
+
 #else
 #error OS not supported
 #endif

@@ -55,7 +55,7 @@
 #include "struct.h"
 #include "tpool.h"
 
-#if !defined(_LINUX_) && !defined(_SOLARIS_)
+#if !defined(_LINUX_) && !defined(_SOLARIS_) && !defined(_DARWIN_)
 #error OS not supported
 #endif
 

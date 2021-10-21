@@ -53,6 +53,8 @@ endif
 
 ifeq ($(OSTYPE),Darwin)
 OS = -D_DARWIN_
+CC = gcc
+CFLAGS = -Wall $(OS) -O3 -fno-stack-protector
 endif
 
 ARCHTYPE = $(shell uname -m)
@@ -62,6 +64,9 @@ ARCH = -DCPU_V9
 endif
 
 ifeq ($(ARCHTYPE),aarch64)
+ARCH = -D__AARCH64__
+endif
+ifeq ($(ARCHTYPE),arm64)
 ARCH = -D__AARCH64__
 endif
 
@@ -82,6 +87,7 @@ PHOENIX = phoenix
 LIB_PHOENIX = lib$(PHOENIX)
 
 LINKAGE = static
+# LINKAGE = dynamic
 ifeq ($(LINKAGE),static)
 TARGET = $(LIB_PHOENIX).a
 LIB_DEP = $(HOME)/$(LIB_DIR)/$(TARGET)

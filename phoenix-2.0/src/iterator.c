@@ -33,6 +33,10 @@
 #include <stdlib.h>
 #endif
 
+#if defined(_DARWIN_)
+#include <stddef.h>
+#endif
+
 typedef struct iterator_t iterator_t;
 
 int iter_init (iterator_t *itr, int num_lists)
