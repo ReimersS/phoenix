@@ -26,7 +26,7 @@
 
 #include <assert.h>
 #include <pthread.h>
-#include <sys/unistd.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <unistd.h>

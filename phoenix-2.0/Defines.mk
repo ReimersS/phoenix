@@ -36,9 +36,10 @@ endif
 
 ifeq ($(OSTYPE),Linux)
 OS = -D_LINUX_
-CC = gcc
+# CC = gcc
+CC = musl-gcc
 #DEBUG = -g
-CFLAGS = -Wall $(OS) $(DEBUG) -O3
+CFLAGS = -I/usr/lib/musl/include -Wall $(OS) $(DEBUG) -O3
 LIBS = -pthread
 endif
 
@@ -71,7 +72,7 @@ ARCH = -D__AARCH64__
 endif
 
 ifeq ($(ARCHTYPE),x86_64)
-ARCH = -D__x86_64__
+ARCH = -D__x86_64__ -mno-avx512f -static
 endif
 
 CFLAGS += $(ARCH)
