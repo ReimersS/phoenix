@@ -31,7 +31,7 @@ HOME = ../..
 
 include $(HOME)/Defines.mk
 
-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX)
+LIBS += -L$(HOME)/$(LIB_DIR)
 
 MM_OBJS = matrix_multiply.o
 MM_SEQ_OBJS = matrix_multiply-seq.o

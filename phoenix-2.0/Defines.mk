@@ -36,8 +36,8 @@ endif
 
 ifeq ($(OSTYPE),Linux)
 OS = -D_LINUX_
-# CC = gcc
-CC = musl-gcc
+CC = musl-clang
+#CC = riscv64-unknown-linux-gnu-clang
 #DEBUG = -g
 CFLAGS = -I/usr/lib/musl/include -Wall $(OS) $(DEBUG) -O3
 LIBS = -pthread
@@ -65,15 +65,20 @@ ARCH = -DCPU_V9
 endif
 
 ifeq ($(ARCHTYPE),aarch64)
-ARCH = -D__AARCH64__
+ARCH = -D__AARCH64__ -static
 endif
 ifeq ($(ARCHTYPE),arm64)
-ARCH = -D__AARCH64__
+ARCH = -D__AARCH64__ -static
 endif
 
 ifeq ($(ARCHTYPE),x86_64)
-ARCH = -D__x86_64__ -mno-avx512f -static
+	ifeq (${CROSS}, 1)
+	ARCH = -D__RISCV64__ -fno-PIC
+	else
+	ARCH = -D__X86__ -mno-avx2 -fno-PIE
+	endif
 endif
+
 
 CFLAGS += $(ARCH)
 
@@ -82,16 +87,17 @@ CFLAGS += $(ARCH)
 # file for more information.
 AR = ar
 RANLIB = ranlib
-LDFLAGS =
+LDFLAGS = $NIX_LDFLAGS
 
 PHOENIX = phoenix
 LIB_PHOENIX = lib$(PHOENIX)
 
 LINKAGE = static
-# LINKAGE = dynamic
+#LINKAGE = dynamic
 ifeq ($(LINKAGE),static)
 TARGET = $(LIB_PHOENIX).a
 LIB_DEP = $(HOME)/$(LIB_DIR)/$(TARGET)
+LIBS += $(LIB_DEP)
 endif
 
 ifeq ($(LINKAGE),dynamic)

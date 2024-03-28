@@ -31,7 +31,7 @@ HOME = ../..
 
 include $(HOME)/Defines.mk
 
-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX)
+LIBS += -L$(HOME)/$(LIB_DIR)
 
 STR_MATCH_OBJS = string_match.o
 STR_MATCH_SEQ_OBJS = string_match-seq.o

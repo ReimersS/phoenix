@@ -31,7 +31,7 @@ HOME = ../..
 
 include $(HOME)/Defines.mk
 
-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX)
+LIBS += -L$(HOME)/$(LIB_DIR)
 
 HIST_OBJS = histogram.o
 HIST_SEQ_OBJS = histogram-seq.o
