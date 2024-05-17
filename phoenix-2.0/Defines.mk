@@ -65,16 +65,16 @@ ARCH = -DCPU_V9
 endif
 
 ifeq ($(ARCHTYPE),aarch64)
-ARCH = -D__AARCH64__ -mno-outline-atomics -fno-PIE
+ARCH = -D__AARCH64__ -mno-outline-atomics -fno-PIE -fPIC
 
 endif
 ifeq ($(ARCHTYPE),arm64)
-ARCH = -D__AARCH64__ -mno-outline-atomics -fno-PIE
+ARCH = -D__AARCH64__ -mno-outline-atomics -fno-PIE -fPIC
 
 endif
 
 ifeq ($(ARCHTYPE),x86_64)
-	ARCH = -D__X86__ -mno-avx2 -fno-PIE
+	ARCH = -D__X86__ -mno-avx2 -fno-PIE -fPIC
 endif
 
 ifeq ($(ARCHTYPE),riscv64)
