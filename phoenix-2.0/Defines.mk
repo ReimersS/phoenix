@@ -36,7 +36,7 @@ endif
 
 ifeq ($(OSTYPE),Linux)
 OS = -D_LINUX_
-CC = musl-clang
+#CC = ${CC}
 #CC = riscv64-unknown-linux-gnu-clang
 #DEBUG = -g
 CFLAGS = -I/usr/lib/musl/include -Wall $(OS) $(DEBUG) -O3
@@ -65,20 +65,21 @@ ARCH = -DCPU_V9
 endif
 
 ifeq ($(ARCHTYPE),aarch64)
-ARCH = -D__AARCH64__ -static
+ARCH = -D__AARCH64__ -mno-outline-atomics -fno-PIE
+
 endif
 ifeq ($(ARCHTYPE),arm64)
-ARCH = -D__AARCH64__ -static
+ARCH = -D__AARCH64__ -mno-outline-atomics -fno-PIE
+
 endif
 
 ifeq ($(ARCHTYPE),x86_64)
-	ifeq (${CROSS}, 1)
-	ARCH = -D__RISCV64__ -fno-PIC
-	else
 	ARCH = -D__X86__ -mno-avx2 -fno-PIE
-	endif
 endif
 
+ifeq ($(ARCHTYPE),riscv64)
+	ARCH = -D__RISCV64__ -fno-PIE -fPIC
+endif
 
 CFLAGS += $(ARCH)
 
