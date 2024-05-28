@@ -263,11 +263,6 @@ int main(int argc, char *argv[]) {
    CHECK_ERROR(close(fd) < 0);
    
    free(pid);
-   for(i = 0; i < num_procs; i++) {
-      free(arg[i].red);
-      free(arg[i].green);
-      free(arg[i].blue);
-   }
    free(arg);
    pthread_attr_destroy(&attr);
    
