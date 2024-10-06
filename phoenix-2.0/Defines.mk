@@ -36,11 +36,10 @@ endif
 
 ifeq ($(OSTYPE),Linux)
 OS = -D_LINUX_
-#CC = ${CC}
 #CC = riscv64-unknown-linux-gnu-clang
 #DEBUG = -g
-CFLAGS = -Wall $(OS) $(DEBUG) -O3
-LIBS = -pthread
+CFLAGS = -Wall $(OS) $(DEBUG) -O3 -std=gnu99
+LIBS = -pthread -lm 
 endif
 
 ifeq ($(OSTYPE),SunOS)
@@ -65,19 +64,19 @@ ARCH = -DCPU_V9
 endif
 
 ifeq ($(ARCHTYPE),aarch64)
-ARCH = -D__AARCH64__ -mno-outline-atomics -fno-PIE -no-pie
+ARCH = -D__AARCH64__ -mno-outline-atomics -fno-vectorize -fno-PIE -no-pie
 
 endif
 ifeq ($(ARCHTYPE),arm64)
-ARCH = -D__AARCH64__ -mno-outline-atomics -fno-PIE -no-pie
+ARCH = -D__AARCH64__ -mno-outline-atomics -fno-vectorize -fno-PIE -no-pie
 endif
 
 ifeq ($(ARCHTYPE),x86_64)
-	ARCH = -D__X86__ -mno-avx2 -fno-PIE -no-pie
+	ARCH = -D__X86__ -mno-avx2 -fno-vectorize -fno-PIE -no-pie
 endif
 
 ifeq ($(ARCHTYPE),riscv64)
-	ARCH = -D__RISCV64__ -fno-PIE -no-pie
+	ARCH = -D__RISCV64__ -fno-vectorize -fno-PIE -no-pie
 endif
 
 CFLAGS += $(ARCH)

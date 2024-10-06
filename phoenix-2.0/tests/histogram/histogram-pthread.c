@@ -36,8 +36,14 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <pthread.h>
+#define _GNU_SOURCE
+#include <sched.h>
 
-#include "stddefines.h"
+#define CHECK_ERROR(a)                                                         \
+  if (a) {                                                                     \
+    perror("Error at line\n\t" #a "\nSystem Msg");                             \
+    exit(1);                                                                   \
+  }
 
 #define IMG_DATA_OFFSET_POS 10
 #define BITS_PER_PIXEL_POS 28
@@ -60,11 +66,11 @@ void test_endianess() {
    unsigned int num = 0x12345678;
    char *low = (char *)(&(num));
    if (*low ==  0x78) {
-      dprintf("No need to swap\n");
+      printf("No need to swap\n");
       swap = 0;
    }
    else if (*low == 0x12) {
-      dprintf("Need to swap\n");
+      printf("Need to swap\n");
       swap = 1;
    }
    else {
@@ -81,7 +87,7 @@ void swap_bytes(char *bytes, int num_bytes) {
    char tmp;
    
    for (i = 0; i < num_bytes/2; i++) {
-      dprintf("Swapping %d and %d\n", bytes[i], bytes[num_bytes - i - 1]);
+      printf("Swapping %d and %d\n", bytes[i], bytes[num_bytes - i - 1]);
       tmp = bytes[i];
       bytes[i] = bytes[num_bytes - i - 1];
       bytes[num_bytes - i - 1] = tmp;   
@@ -146,7 +152,7 @@ int main(int argc, char *argv[]) {
    int red[256];
    int green[256];
    int blue[256];
-   int num_procs;
+   int num_procs = 0;
    int num_per_thread;
    int excess;
 
@@ -205,7 +211,16 @@ int main(int argc, char *argv[]) {
    pthread_attr_init(&attr);
    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
    
-   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   unsigned long cpus;
+   CHECK_ERROR(sched_getaffinity(0, sizeof(cpus), &cpus) == -1);
+
+   for (i = 0; i < sizeof(cpus) * 8; i++) {
+      if (cpus & (1 << i)) {
+         num_procs++;
+      }
+   }
+
    num_per_thread = num_pixels / num_procs;
    excess = num_pixels % num_procs;
    
@@ -241,22 +256,22 @@ int main(int argc, char *argv[]) {
       }
    }
 
-   dprintf("\n\nBlue\n");
-   dprintf("----------\n\n");
+   printf("\n\nBlue\n");
+   printf("----------\n\n");
    for (i = 0; i < 256; i++) {
-      dprintf("%d - %d\n", i, blue[i]);        
+      printf("%d - %d\n", i, blue[i]);        
    }
 
-   dprintf("\n\nGreen\n");
-   dprintf("----------\n\n");
+   printf("\n\nGreen\n");
+   printf("----------\n\n");
    for (i = 0; i < 256; i++) {
-      dprintf("%d - %d\n", i, green[i]);        
+      printf("%d - %d\n", i, green[i]);        
    }
    
-   dprintf("\n\nRed\n");
-   dprintf("----------\n\n");
+   printf("\n\nRed\n");
+   printf("----------\n\n");
    for (i = 0; i < 256; i++) {
-      dprintf("%d - %d\n", i, red[i]);        
+      printf("%d - %d\n", i, red[i]);        
    }
 
    CHECK_ERROR(munmap(fdata, finfo.st_size + 1) < 0);

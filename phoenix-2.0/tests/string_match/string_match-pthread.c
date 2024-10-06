@@ -36,10 +36,12 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <time.h>
-#include <crypt.h>
+//#include <crypt.h>
 #include <pthread.h>
 #include <sys/time.h>
 #include <inttypes.h>
+#define _GNU_SOURCE
+#include <sched.h>
 
 #include "map_reduce.h"
 #include "stddefines.h"
@@ -138,9 +140,18 @@ void string_match_splitter(void *data_in)
 
     pthread_attr_t attr;
     pthread_t * tid;
-    int i, num_procs;
+    int i;
+    int num_procs = 0;
 
-    CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+    //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+    unsigned long cpus;
+    CHECK_ERROR(sched_getaffinity(0, sizeof(cpus), &cpus) == -1);
+
+    for (i = 0; i < sizeof(cpus) * 8; i++) {
+       if (cpus & (1 << i)) {
+          num_procs++;
+       }
+    }
     printf("THe number of processors is %d\n", num_procs);
 
     str_data_t * data = (str_data_t *)data_in; 

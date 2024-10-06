@@ -34,6 +34,8 @@
 #include <string.h>
 #include <math.h>
 #include <pthread.h>
+#define _GNU_SOURCE
+#include <sched.h>
 #include "stddefines.h"
 
 #define DEF_GRID_SIZE 100  // all values in the matrix are from 0 to this value 
@@ -43,7 +45,7 @@
 int num_rows;
 int num_cols;
 int grid_size;
-int num_procs;
+int num_procs = 0;
 int next_row;
 
 int **matrix, **cov;
@@ -190,7 +192,15 @@ void pthread_mean() {
    int i;
    mean_arg_t *mean_args;
 
-   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   unsigned long cpus;
+   CHECK_ERROR(sched_getaffinity(0, sizeof(cpus), &cpus) == -1);
+
+   for (i = 0; i < sizeof(cpus) * 8; i++) {
+      if (cpus & (1 << i)) {
+         num_procs++;
+      }
+   }
    printf("The number of processors is %d\n", num_procs);
 
    tid = (pthread_t *)MALLOC(num_procs * sizeof(pthread_t));

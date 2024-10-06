@@ -67,11 +67,20 @@ void *sort_section(void *args_in)
 void sort_pthreads(void *base, size_t num_elems, size_t width,
        int (*compar)(const void *, const void *))
 {
-   int req_units, num_threads, num_procs, i;
+   int req_units, num_threads, i;
+   int num_procs = 0;
    pthread_attr_t attr;
    pthread_t * tid;
 
-   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   unsigned long cpus;
+   CHECK_ERROR(sched_getaffinity(0, sizeof(cpus), &cpus) == -1);
+
+   for (i = 0; i < sizeof(cpus) * 8; i++) {
+      if (cpus & (1 << i)) {
+         num_procs++;
+      }
+   }
    printf("THe number of processors is %d\n\n", num_procs);
 
    tid = (pthread_t *)malloc(num_procs * sizeof(pthread_t)); 

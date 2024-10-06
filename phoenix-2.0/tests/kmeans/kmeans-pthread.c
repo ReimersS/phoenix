@@ -34,6 +34,8 @@
 #include <string.h>
 #include <math.h>
 #include <pthread.h>
+#define _GNU_SOURCE
+#include <sched.h>
 
 #include "stddefines.h"
 #include "map_reduce.h"
@@ -249,7 +251,8 @@ void *calc_means(void *arg)
 int main(int argc, char **argv)
 {
    
-   int num_procs, curr_point;
+   int num_procs = 0;
+   int curr_point;
    int i;
    pthread_t *pid;
    pthread_attr_t attr;
@@ -280,8 +283,17 @@ int main(int argc, char **argv)
    
    pthread_attr_init(&attr);
    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
-   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
       
+   unsigned long cpus;
+   CHECK_ERROR(sched_getaffinity(0, sizeof(cpus), &cpus) == -1);
+
+   for (i = 0; i < sizeof(cpus) * 8; i++) {
+      if (cpus & (1 << i)) {
+         num_procs++;
+      }
+   }
+
    CHECK_ERROR( (pid = (pthread_t *)malloc(sizeof(pthread_t) * num_procs)) == NULL);
    
    modified = true; 

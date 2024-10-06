@@ -37,6 +37,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctype.h>
+#define _GNU_SOURCE
+#include <sched.h>
 
 #include "stddefines.h"
 
@@ -93,7 +95,8 @@ int main(int argc, char *argv[])
    char * fname;
    struct stat finfo;
     
-   int req_units, num_threads, num_procs, i;
+   int req_units, num_threads, i;
+   int num_procs = 0;
    pthread_attr_t attr;
    lreg_args* tid_args;
 
@@ -115,7 +118,15 @@ int main(int argc, char *argv[])
    CHECK_ERROR((fdata = mmap(0, finfo.st_size + 1, 
       PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) == NULL);
 
-   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   unsigned long cpus;
+   CHECK_ERROR(sched_getaffinity(0, sizeof(cpus), &cpus) == -1);
+
+   for (i = 0; i < sizeof(cpus) * 8; i++) {
+      if (cpus & (1 << i)) {
+         num_procs++;
+      }
+   }
    printf("The number of processors is %d\n\n", num_procs);
 
    pthread_attr_init(&attr);

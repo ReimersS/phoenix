@@ -37,6 +37,8 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <pthread.h>
+#define _GNU_SOURCE
+#include <sched.h>
 
 #include "stddefines.h"
 #include "sort-pthread.h"
@@ -119,9 +121,18 @@ void wordcount_splitter(void *data_in)
 {
    pthread_attr_t attr;
    pthread_t * tid;
-   int i,num_procs;
+   int i;
+   int num_procs = 0;
 
-   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   unsigned long cpus;
+   CHECK_ERROR(sched_getaffinity(0, sizeof(cpus), &cpus) == -1);
+
+   for (i = 0; i < sizeof(cpus) * 8; i++) {
+      if (cpus & (1 << i)) {
+         num_procs++;
+      }
+   }
    dprintf("THe number of processors is %d\n\n", num_procs);
 
    wc_data_t * data = (wc_data_t *)data_in; 

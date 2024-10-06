@@ -39,6 +39,8 @@
 #include <time.h>
 #include <pthread.h>
 #include <inttypes.h>
+#define _GNU_SOURCE
+#include <sched.h>
 
 #include "map_reduce.h"
 #include "stddefines.h"
@@ -66,7 +68,8 @@ void matrixmult_splitter(void *data_in)
 {
     pthread_attr_t attr;
     pthread_t * tid;
-    int i, num_procs;
+    int i;
+    int num_procs = 0;
 
 	/* Make a copy of the mm_data structure */
     mm_data_t * data = (mm_data_t *)data_in; 
@@ -78,7 +81,15 @@ void matrixmult_splitter(void *data_in)
     assert(data->matrix_B);
     assert(data->output);
 
-    CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+    //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+    unsigned long cpus;
+    CHECK_ERROR(sched_getaffinity(0, sizeof(cpus), &cpus) == -1);
+
+    for (i = 0; i < sizeof(cpus) * 8; i++) {
+       if (cpus & (1 << i)) {
+          num_procs++;
+       }
+    }
     dprintf("THe number of processors is %d\n", num_procs);
 
     tid = (pthread_t *)MALLOC(num_procs * sizeof(pthread_t));
