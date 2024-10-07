@@ -212,13 +212,7 @@ int main(int argc, char *argv[]) {
    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
    
    //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
-   cpu_set_t cpus;
-   sched_getaffinity(0, sizeof(cpus), &cpus);
-
-    for (i = 0; i < sizeof(cpus)*8; i++)
-    {
-        if (CPU_ISSET (i, &cpus)) num_procs++;
-    }
+   num_procs = 16;
 
    num_per_thread = num_pixels / num_procs;
    excess = num_pixels % num_procs;

@@ -284,14 +284,7 @@ int main(int argc, char **argv)
    pthread_attr_init(&attr);
    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
    //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
-      
-   cpu_set_t cpus;
-   sched_getaffinity(0, sizeof(cpus), &cpus);
-
-    for (i = 0; i < sizeof(cpus)*8; i++)
-    {
-        if (CPU_ISSET (i, &cpus)) num_procs++;
-    }
+   num_procs = 16;
 
    CHECK_ERROR( (pid = (pthread_t *)malloc(sizeof(pthread_t) * num_procs)) == NULL);
    

@@ -73,13 +73,7 @@ void sort_pthreads(void *base, size_t num_elems, size_t width,
    pthread_t * tid;
 
    //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
-   cpu_set_t cpus;
-   sched_getaffinity(0, sizeof(cpus), &cpus);
-
-    for (i = 0; i < sizeof(cpus)*8; i++)
-    {
-        if (CPU_ISSET (i, &cpus)) num_procs++;
-    }
+   num_procs = 16;
    printf("THe number of processors is %d\n\n", num_procs);
 
    tid = (pthread_t *)malloc(num_procs * sizeof(pthread_t)); 

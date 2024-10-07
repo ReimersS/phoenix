@@ -119,14 +119,9 @@ int main(int argc, char *argv[])
       PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) == NULL);
 
    //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+   num_procs = 16;
+   
    printf("The number of processors is %d\n\n", num_procs);
-   cpu_set_t cpus;
-   sched_getaffinity(0, sizeof(cpus), &cpus);
-
-    for (i = 0; i < sizeof(cpus)*8; i++)
-    {
-        if (CPU_ISSET (i, &cpus)) num_procs++;
-    }
 
    pthread_attr_init(&attr);
    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);

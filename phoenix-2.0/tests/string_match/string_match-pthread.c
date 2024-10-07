@@ -144,13 +144,7 @@ void string_match_splitter(void *data_in)
     int num_procs = 0;
 
     //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
-   cpu_set_t cpus;
-   sched_getaffinity(0, sizeof(cpus), &cpus);
-
-    for (i = 0; i < sizeof(cpus)*8; i++)
-    {
-        if (CPU_ISSET (i, &cpus)) num_procs++;
-    }
+   num_procs = 16;
     printf("THe number of processors is %d\n", num_procs);
 
     str_data_t * data = (str_data_t *)data_in; 

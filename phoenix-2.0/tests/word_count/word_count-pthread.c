@@ -125,13 +125,7 @@ void wordcount_splitter(void *data_in)
    int num_procs = 0;
 
    //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
-   cpu_set_t cpus;
-   sched_getaffinity(0, sizeof(cpus), &cpus);
-
-    for (i = 0; i < sizeof(cpus)*8; i++)
-    {
-        if (CPU_ISSET (i, &cpus)) num_procs++;
-    }
+   num_procs = 16;
    dprintf("THe number of processors is %d\n\n", num_procs);
 
    wc_data_t * data = (wc_data_t *)data_in; 
