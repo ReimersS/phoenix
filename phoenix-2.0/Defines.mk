@@ -57,7 +57,7 @@ CC = gcc
 CFLAGS = -Wall $(OS) -O3 -fno-stack-protector
 endif
 
-ARCHTYPE = $(shell uname -m)
+#ARCHTYPE = $(shell uname -m)
 
 ifeq ($(ARCHTYPE),sparc)
 ARCH = -DCPU_V9
