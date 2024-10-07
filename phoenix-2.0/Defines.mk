@@ -35,7 +35,7 @@ OS = -D_CYGWIN_
 endif
 
 ifeq ($(OSTYPE),Linux)
-OS = -D_LINUX_
+OS = -D_LINUX_ -D_GNU_SOURCE
 #CC = riscv64-unknown-linux-gnu-clang
 #DEBUG = -g
 CFLAGS = -Wall $(OS) $(DEBUG) -O3 -std=gnu99

@@ -24,6 +24,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */ 
 
+#include <features.h>
 #include <stdio.h>
 #include <strings.h>
 #include <string.h>
@@ -37,7 +38,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctype.h>
-#define _GNU_SOURCE
 #include <sched.h>
 
 #include "stddefines.h"
@@ -119,15 +119,14 @@ int main(int argc, char *argv[])
       PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) == NULL);
 
    //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
-   unsigned long cpus;
-   CHECK_ERROR(sched_getaffinity(0, sizeof(cpus), &cpus) == -1);
-
-   for (i = 0; i < sizeof(cpus) * 8; i++) {
-      if (cpus & (1 << i)) {
-         num_procs++;
-      }
-   }
    printf("The number of processors is %d\n\n", num_procs);
+   cpu_set_t cpus;
+   sched_getaffinity(0, sizeof(cpus), &cpus);
+
+    for (i = 0; i < sizeof(cpus)*8; i++)
+    {
+        if (CPU_ISSET (i, &cpus)) num_procs++;
+    }
 
    pthread_attr_init(&attr);
    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);

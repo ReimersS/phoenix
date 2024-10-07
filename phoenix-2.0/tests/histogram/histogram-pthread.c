@@ -24,6 +24,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */ 
 
+#include <features.h>
 #include <stdio.h>
 #include <strings.h>
 #include <string.h>
@@ -36,7 +37,6 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <pthread.h>
-#define _GNU_SOURCE
 #include <sched.h>
 
 #define CHECK_ERROR(a)                                                         \
@@ -212,14 +212,13 @@ int main(int argc, char *argv[]) {
    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
    
    //CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
-   unsigned long cpus;
-   CHECK_ERROR(sched_getaffinity(0, sizeof(cpus), &cpus) == -1);
+   cpu_set_t cpus;
+   sched_getaffinity(0, sizeof(cpus), &cpus);
 
-   for (i = 0; i < sizeof(cpus) * 8; i++) {
-      if (cpus & (1 << i)) {
-         num_procs++;
-      }
-   }
+    for (i = 0; i < sizeof(cpus)*8; i++)
+    {
+        if (CPU_ISSET (i, &cpus)) num_procs++;
+    }
 
    num_per_thread = num_pixels / num_procs;
    excess = num_pixels % num_procs;
