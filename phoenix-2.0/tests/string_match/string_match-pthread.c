@@ -166,8 +166,7 @@ void string_match_splitter(void *data_in)
 
     int req_bytes = data->keys_file_len / num_procs;
 
-    str_map_data_t *map_data = (str_map_data_t*)malloc(sizeof(str_map_data_t) 
-                                                                                        * num_procs);
+    str_map_data_t *map_data = (str_map_data_t*)malloc(sizeof(str_map_data_t) * num_procs);
     map_args_t* out = (map_args_t*)malloc(sizeof(map_args_t) * num_procs);
 
     for(i=0; i<num_procs; i++)
@@ -209,7 +208,7 @@ void string_match_splitter(void *data_in)
     /* Barrier, wait for all threads to finish */
     for (i = 0; i < num_procs; i++)
     {
-        int ret_val;
+        long ret_val;
         CHECK_ERROR(pthread_join(tid[i], (void **)(void*)&ret_val) != 0);
 	  CHECK_ERROR(ret_val != 0);
     }
