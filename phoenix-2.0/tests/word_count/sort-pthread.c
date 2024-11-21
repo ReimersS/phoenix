@@ -50,10 +50,15 @@ typedef struct {
 	int (*compar)(const void *, const void *);
 } sort_args;
 
+typedef struct {
+	char* word;
+	int count;
+} wc_count_t;
+
 void fast_sort(void *const pbase, size_t total_elems, size_t size, int (*cmp)(const void *, const void *)) {
     if (total_elems < 1) return;
 
-    char* temp = malloc(size*10);
+    wc_count_t* temp = malloc(size);
     if (temp == NULL) {
         exit(2);
     }
@@ -94,10 +99,16 @@ void fast_sort(void *const pbase, size_t total_elems, size_t size, int (*cmp)(co
         size_t j = i;
         while (j > 0 && cmp(base + ((j-1)*size), base + j*size) > 0) {
             // swap
-            memcpy(temp, base + j*size, size);
-            memcpy(base + j*size, base + ((j-1)*size), size);
-            // THIS ONE CAUSES ISSUES
-            // memcpy(base + ((j-1)*size), temp, size);
+            wc_count_t* curr = (wc_count_t*)(base + (j*size));
+            wc_count_t* prev = (wc_count_t*)(base + ((j-1)*size));
+            temp->word = curr->word;
+            temp->count = curr->count;
+
+            curr->word = prev->word;
+            curr->count = prev->count;
+
+            prev->word = temp->word;
+            prev->count = temp->count;
 
             --j;
         }
