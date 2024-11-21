@@ -8,8 +8,8 @@
 *     * Redistributions in binary form must reproduce the above copyright
 *       notice, this list of conditions and the following disclaimer in the
 *       documentation and/or other materials provided with the distribution.
-*     * Neither the name of Stanford University nor the names of its 
-*       contributors may be used to endorse or promote products derived from 
+*     * Neither the name of Stanford University nor the names of its
+*       contributors may be used to endorse or promote products derived from
 *       this software without specific prior written permission.
 *
 * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ``AS IS'' AND ANY
@@ -22,7 +22,7 @@
 * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/ 
+*/
 
 #include <stdio.h>
 #include <strings.h>
@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <pthread.h>
+#include <stdint.h>
 
 #define CHECK_ERROR(a)                                       \
    if (a)                                                    \
@@ -49,14 +50,68 @@ typedef struct {
 	int (*compar)(const void *, const void *);
 } sort_args;
 
+void fast_sort(void *const pbase, size_t total_elems, size_t size, int (*cmp)(const void *, const void *)) {
+    if (total_elems < 1) return;
+
+    char* temp = malloc(size*10);
+    if (temp == NULL) {
+        exit(2);
+    }
+
+    // char *const base = pbase;
+    // for (size_t i = 0; i < total_elems - 1; ++i) {
+    //     size_t min_idx = i;
+    //     for (size_t j = i+1; j < total_elems; ++j) {
+    //         if (cmp(base + (min_idx*size), base + (j*size)) > 0) {
+    //             min_idx = j;
+    //         }
+    //     }
+
+    //     if (min_idx != i) {
+    //         // memcpy(temp, base + (i*size), size);
+    //         // memcpy(base + (i*size), base + (min_idx*size), size);
+    //         // memcpy(base + (min_idx*size), temp, size);
+    //     }
+    // }
+
+    // int swapped = 0;
+    // char *const base = pbase;
+    // do {
+    //     swapped = 0;
+    //     for (size_t i = 0; i < total_elems - 1; ++i) {
+    //         if (cmp(base + ((i + 1) * size), base + i*size) > 0) {
+    //             memcpy(temp, base + (i*size), size);
+    //             memcpy(base + (i*size), base + ((i+1)*size), size);
+    //             memcpy(base + ((i+1)*size), temp, size);
+    //             swapped = 1;
+    //         }
+    //     }
+    // } while (swapped);
+
+    for (size_t i = 1; i < total_elems; ++i) {
+        char *const base = pbase;
+
+        size_t j = i;
+        while (j > 0 && cmp(base + ((j-1)*size), base + j*size) > 0) {
+            // swap
+            memcpy(temp, base + j*size, size);
+            memcpy(base + j*size, base + ((j-1)*size), size);
+            // THIS ONE CAUSES ISSUES
+            // memcpy(base + ((j-1)*size), temp, size);
+
+            --j;
+        }
+    }
+}
+
 /** sort_section()
  *  USes qsort to sort the respective portions
  */
-void *sort_section(void *args_in) 
+void *sort_section(void *args_in)
 {
 	sort_args* args =(sort_args*)args_in;
 
-	qsort(args->base, args->num_elems, args->width, args->compar);
+	fast_sort(args->base, args->num_elems, args->width, args->compar);
 	free(args);
 	return (void *)0;
 }
@@ -82,7 +137,7 @@ void sort_pthreads(void *base, size_t num_elems, size_t width,
     }
    printf("THe number of processors is %d\n\n", num_procs);
 
-   tid = (pthread_t *)malloc(num_procs * sizeof(pthread_t)); 
+   tid = (pthread_t *)malloc(num_procs * sizeof(pthread_t));
    pthread_attr_init(&attr);
    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
 
@@ -95,7 +150,7 @@ void sort_pthreads(void *base, size_t num_elems, size_t width,
 	   for(i=0; i<num_threads; i++)
 	   {
 		   sort_args* out = (sort_args*)malloc(sizeof(sort_args));
-		   
+
 		   out->base = ((char*)base) + i*req_units*width;
 		   out->num_elems = req_units;
 		   if(i == (num_threads - 1))
@@ -106,6 +161,8 @@ void sort_pthreads(void *base, size_t num_elems, size_t width,
 		   CHECK_ERROR(pthread_create(&tid[i], &attr, sort_section, (void*)out) != 0);
 
 	   }
+
+       printf("Setting barrier to wait for all threads to finish\n");
 
 	   /* Barrier, wait for all threads to finish */
 	   for (i = 0; i < num_threads; i++)
