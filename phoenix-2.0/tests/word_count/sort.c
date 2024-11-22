@@ -8,8 +8,8 @@
 *     * Redistributions in binary form must reproduce the above copyright
 *       notice, this list of conditions and the following disclaimer in the
 *       documentation and/or other materials provided with the distribution.
-*     * Neither the name of Stanford University nor the names of its 
-*       contributors may be used to endorse or promote products derived from 
+*     * Neither the name of Stanford University nor the names of its
+*       contributors may be used to endorse or promote products derived from
 *       this software without specific prior written permission.
 *
 * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ``AS IS'' AND ANY
@@ -22,7 +22,7 @@
 * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/ 
+*/
 
 #include <stdio.h>
 #include <strings.h>
@@ -53,27 +53,92 @@ static inline char * MR_GETENV(char *envstr)
 static int unit_size;
 static int (*compare_g)(const void *, const void *);
 
+typedef struct {
+	char* word;
+	int count;
+} wc_count_t;
+
+void fast_sort(void *const pbase, size_t total_elems, size_t size, int (*cmp)(const void *, const void *)) {
+    if (total_elems < 1) return;
+
+    wc_count_t* temp = malloc(size);
+    if (temp == NULL) {
+        exit(2);
+    }
+
+    // char *const base = pbase;
+    // for (size_t i = 0; i < total_elems - 1; ++i) {
+    //     size_t min_idx = i;
+    //     for (size_t j = i+1; j < total_elems; ++j) {
+    //         if (cmp(base + (min_idx*size), base + (j*size)) > 0) {
+    //             min_idx = j;
+    //         }
+    //     }
+
+    //     if (min_idx != i) {
+    //         // memcpy(temp, base + (i*size), size);
+    //         // memcpy(base + (i*size), base + (min_idx*size), size);
+    //         // memcpy(base + (min_idx*size), temp, size);
+    //     }
+    // }
+
+    // int swapped = 0;
+    // char *const base = pbase;
+    // do {
+    //     swapped = 0;
+    //     for (size_t i = 0; i < total_elems - 1; ++i) {
+    //         if (cmp(base + ((i + 1) * size), base + i*size) > 0) {
+    //             memcpy(temp, base + (i*size), size);
+    //             memcpy(base + (i*size), base + ((i+1)*size), size);
+    //             memcpy(base + ((i+1)*size), temp, size);
+    //             swapped = 1;
+    //         }
+    //     }
+    // } while (swapped);
+
+    for (size_t i = 1; i < total_elems; ++i) {
+        char *const base = pbase;
+
+        size_t j = i;
+        while (j > 0 && cmp(base + ((j-1)*size), base + j*size) > 0) {
+            // swap
+            wc_count_t* curr = (wc_count_t*)(base + (j*size));
+            wc_count_t* prev = (wc_count_t*)(base + ((j-1)*size));
+            temp->word = curr->word;
+            temp->count = curr->count;
+
+            curr->word = prev->word;
+            curr->count = prev->count;
+
+            prev->word = temp->word;
+            prev->count = temp->count;
+
+            --j;
+        }
+    }
+}
+
 /** mr_sort_map()
  *  Sorts based on the val output of wordcount
  */
-static void mr_sort_map(map_args_t *args) 
+static void mr_sort_map(map_args_t *args)
 {
     assert(args);
-    
+
     void *data = (void *)args->data;
     int i;
 
     assert(data);
-    
-    qsort(data, args->length, unit_size, compare_g);
+
+    fast_sort(data, args->length, unit_size, compare_g);
     for (i = 0; i < args->length; i++)
     {
-        emit_intermediate(((char *)data) + (i*unit_size), (void *)0, unit_size); 
+        emit_intermediate(((char *)data) + (i*unit_size), (void *)0, unit_size);
     }
 }
 
 /** mr_mypartition()
- *  
+ *
  */
 static int mr_mypartition(int reduce_tasks, void* key, int key_size)
 {
@@ -92,7 +157,7 @@ extern struct timeval begin, end;
 extern unsigned int library_time;
 
 /** mapreduce_sort()
- *  
+ *
  */
 void mapreduce_sort(void *base, size_t num_elems, size_t width,
          int (*compar)(const void *, const void *))
@@ -112,7 +177,7 @@ void mapreduce_sort(void *base, size_t num_elems, size_t width,
     map_reduce_args.splitter = NULL; // Array splitter //mr_sort_splitter;
     map_reduce_args.key_cmp = compar;
     map_reduce_args.unit_size = width;
-    map_reduce_args.partition = mr_mypartition; 
+    map_reduce_args.partition = mr_mypartition;
     map_reduce_args.result = &sort_vals;
     map_reduce_args.data_size = num_elems * width;
     map_reduce_args.L1_cache_size = atoi(MR_GETENV("MR_L1CACHESIZE"));//1024 * 1024 * 2;
@@ -139,19 +204,19 @@ void mapreduce_sort(void *base, size_t num_elems, size_t width,
 #endif
 
     get_time (&begin);
-    
-    char * tmp = (char *)MR_MALLOC(width * num_elems); 
+
+    char * tmp = (char *)MR_MALLOC(width * num_elems);
     int i;
-    
+
     // Need to copy to temp array first since
     // we could be sorting array of pointers
     for(i = 0; i < sort_vals.length; i++)
     {
         memcpy(tmp + (i*width), sort_vals.data[i].key, width);
     }
-    
+
     memcpy(base, tmp, width * num_elems);
-    
+
     free(tmp);
     free(sort_vals.data);
 }
