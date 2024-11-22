@@ -9,8 +9,8 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * Neither the name of Stanford University nor the names of its 
-#       contributors may be used to endorse or promote products derived from 
+#     * Neither the name of Stanford University nor the names of its
+#       contributors may be used to endorse or promote products derived from
 #       this software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ``AS IS'' AND ANY
@@ -23,7 +23,7 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#------------------------------------------------------------------------------ 
+#------------------------------------------------------------------------------
 
 # This Makefile requires GNU make.
 
@@ -39,7 +39,7 @@ OS = -D_LINUX_ -D_GNU_SOURCE
 #CC = riscv64-unknown-linux-gnu-clang
 #DEBUG = -g
 CFLAGS = -Wall $(OS) $(DEBUG) -O3 -std=gnu99
-LIBS = -pthread -lm 
+LIBS = -pthread -lm
 endif
 
 ifeq ($(OSTYPE),SunOS)
@@ -72,7 +72,7 @@ ARCH = -D__AARCH64__ -mno-outline-atomics -fno-vectorize -fno-PIE -no-pie
 endif
 
 ifeq ($(ARCHTYPE),x86_64)
-	ARCH = -D__X86__ -mno-avx2 -fno-vectorize -fno-PIE -no-pie
+	ARCH = -D__X86__ -mno-avx2 -fno-tree-vectorize -fno-PIE -no-pie
 endif
 
 ifeq ($(ARCHTYPE),riscv64)
